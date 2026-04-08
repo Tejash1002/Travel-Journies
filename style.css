@@ -8,7 +8,6 @@
     --border: rgba(0, 0, 0, 0.05);
 }
 
-/* Default Dark Mode Styles */
 .dark {
     --bg-primary: #020617;
     --bg-card: #0f172a;
