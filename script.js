@@ -1,9 +1,9 @@
 const MAX_STORAGE = 20;
 let memories = JSON.parse(localStorage.getItem('travel_journies_db')) || [];
-
-// Logic to default to Dark Mode if no theme is saved yet
-let savedTheme = localStorage.getItem('travel_journies_theme');
-let isDark = savedTheme ? savedTheme === 'dark' : true; // DEFAULT TO DARK
+let isDark = localStorage.getItem('travel_journies_theme') === 'dark';
+let currentId = null;
+let tempImages = [];
+let filterOnlyFavs = false;
 
 const placeholders = [
     "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&q=80&w=800",
@@ -38,13 +38,8 @@ function init() {
 }
 
 function applyTheme() {
-    if (isDark) {
-        document.documentElement.classList.add('dark');
-        dom.themeIcon.className = 'fas fa-sun';
-    } else {
-        document.documentElement.classList.remove('dark');
-        dom.themeIcon.className = 'fas fa-moon';
-    }
+    isDark ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark');
+    dom.themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
 }
 
 function showToast(msg) {
@@ -85,7 +80,7 @@ function createCard(m) {
         <div class="p-6 flex-grow flex flex-col">
             <div class="flex justify-between items-start mb-2"><h3 class="font-bold text-lg line-clamp-1">${m.title || 'Trip'}</h3><div class="flex gap-2"><button onclick="openEdit('${m.id}')"><i class="fas fa-edit text-slate-400"></i></button><button onclick="deleteMem('${m.id}')"><i class="fas fa-trash text-slate-400"></i></button></div></div>
             <p class="text-sm text-slate-500 mb-4 line-clamp-2">${m.content}</p>
-            <div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between text-[10px] font-bold text-slate-400 uppercase"><span>${new Date(m.date).toLocaleDateString()}</span><button onclick="window.open('http://googleusercontent.com/maps.google.com/3{encodeURIComponent(m.location)}')">Map</button></div>
+            <div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between text-[10px] font-bold text-slate-400 uppercase"><span>${new Date(m.date).toLocaleDateString()}</span><button onclick="window.open('https://maps.google.com/?q=${encodeURIComponent(m.location)}')">Map</button></div>
         </div>`;
 
     window.changeImg = (id, s) => { if(id===m.id){ idx=(idx+s+imgs.length)%imgs.length; document.getElementById(`img-${m.id}`).src=imgs[idx]; } };
@@ -102,9 +97,8 @@ dom.addBtn.onclick = () => {
 
 dom.saveBtn.onclick = () => {
     if(!dom.inContent.value) return showToast("Add a story!");
-    let currentTempImages = tempImages;
-    const data = { title: dom.inTitle.value, location: dom.inLoc.value, content: dom.inContent.value, images: currentTempImages, date: Date.now(), isFavorite: false };
-    if(currentId) memories = memories.map(m => m.id === currentId ? {...m, ...data, images: currentTempImages.length ? currentTempImages : m.images} : m);
+    const data = { title: dom.inTitle.value, location: dom.inLoc.value, content: dom.inContent.value, images: tempImages, date: Date.now(), isFavorite: false };
+    if(currentId) memories = memories.map(m => m.id === currentId ? {...m, ...data, images: tempImages.length ? tempImages : m.images} : m);
     else memories.unshift({id: Date.now().toString(), ...data});
     localStorage.setItem('travel_journies_db', JSON.stringify(memories));
     render(); dom.modal.classList.add('hidden'); showToast("Journey Saved!");
